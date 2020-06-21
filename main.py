@@ -20,5 +20,4 @@ if __name__ == "__main__":
         print("Error: Need one input parameter")
         sys.exit()
 
-    primes = atkin.SieveOfAtkin(limit)
-    print(f"Отладка: найдено {len(primes)} простых чисел")
+    atkin.SieveOfAtkin(limit)

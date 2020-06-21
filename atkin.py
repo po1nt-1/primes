@@ -1,3 +1,4 @@
+import db
 import multiprocessing as mp
 
 
@@ -12,72 +13,65 @@ def process_control():
 
 
 def pre_calc(limit):
-    primes = list()  # создать Т (совместить с нижним)
+    db.create_table(limit)
 
     if (limit >= 2):
-        primes.append(2)    # записать в Т: 2 true
+        db.update(2, True)
     if (limit >= 3):
-        primes.append(3)    # записать в Т: 3 true
-
-    sieve = [False] * (limit + 1)   # создать Т (совместить с верхним)
-
-    return sieve    # убрать
+        db.update(3, True)
 
 
-def calc(limit, sieve):  # sieve убрать
-    # прочитать всё из Т
+def calc(limit):
     x = 1
     while(x * x <= limit):
         y = 1
         while(y * y <= limit):
             n = (4 * x * x) + (y * y)
             if (n <= limit and (n % 12 == 1 or n % 12 == 5)):
-                sieve[n] = not sieve[n]
-                # прочитать из Т: n status; записать в Т: n !status
+                checker1 = db.info(n)
+                if checker1 is None:
+                    raise Exception(
+                        "Error1 in atkin.calc(): Number does not exist!")
+                else:
+                    db.update(n, not checker1)
 
             n = (3 * x * x) + (y * y)
             if (n <= limit and n % 12 == 7):
-                sieve[n] = not sieve[n]
-                # прочитать из Т: n status; записать в Т: n !status
+                checker2 = db.info(n)
+                if checker2 is None:
+                    raise Exception(
+                        "Error2 in atkin.calc(): Number does not exist!")
+                else:
+                    db.update(n, not checker2)
 
             n = (3 * x * x) - (y * y)
             if (x > 0 and x > y and n <= limit and n % 12 == 11):
-                sieve[n] = not sieve[n]
-                # прочитать из Т: n status; записать в Т: n !status
+                checker3 = db.info(n)
+                if checker3 is None:
+                    raise Exception(
+                        "Error3 in atkin.calc(): Number does not exist!")
+                else:
+                    db.update(n, not checker3)
             y += 1
         x += 1
 
-    return sieve  # убрать
 
-
-def post_calc(limit, sieve):    # sieve убрать
-    # прочитать всё из Т
+def post_calc(limit):
     i = 5
     while(i * i <= limit):
-        if sieve[i]:
+        if db.info(i):
             n = i * i
             for j in range(n, limit+1, n):
-                sieve[j] = False
-                # записать в Т: j false
+                db.update(j, False)
         i += 1
-
-    primes = list()          # убрать (это здесь для старого вывода)
-
-    if (limit >= 2):         # убрать (это здесь для старого вывода)
-        primes.append(2)     # убрать (это здесь для старого вывода)
-    if (limit >= 3):         # убрать (это здесь для старого вывода)
-        primes.append(3)     # убрать (это здесь для старого вывода)
-
-    for elem in range(len(sieve)):  # вывод убрать
-        if (sieve[elem]):
-            primes.append(elem)
-
-    return primes   # вывод убрать
 
 
 def SieveOfAtkin(limit):
     # pre_calc(limit)
     # calc(limit)
     # post_calc(limit)
-
-    return post_calc(limit, calc(limit, pre_calc(limit)))   # убрать
+    db.open_db()
+    pre_calc(limit)
+    calc(limit)
+    post_calc(limit)
+    db.close_db()

@@ -29,7 +29,7 @@ def open_db() -> int:
     global c
 
     try:
-        conn = sqlite3.connect('primes/database.db')
+        conn = sqlite3.connect('primes/_numbers.db')
         c = conn.cursor()
         return 0
     except sqlite3.Error as e:
@@ -129,3 +129,7 @@ def info(number: int) -> Union[bool, None]:
     if not isinstance(status, bool):
         raise db_Error("Error in db.info(): Invalid output type")
     return status
+
+
+open_db()
+close_db()
