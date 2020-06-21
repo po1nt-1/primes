@@ -15,13 +15,16 @@ def process_control():
 def pre_calc(limit):
     db.create_table(limit)
 
+    db.begin()
     if (limit >= 2):
         db.update(2, True)
     if (limit >= 3):
         db.update(3, True)
+    db.commit()
 
 
 def calc(limit):
+    db.begin()
     x = 1
     while(x * x <= limit):
         y = 1
@@ -54,9 +57,11 @@ def calc(limit):
                     db.update(n, not checker3)
             y += 1
         x += 1
+    db.commit()
 
 
 def post_calc(limit):
+    db.begin()
     i = 5
     while(i * i <= limit):
         if db.info(i):
@@ -64,12 +69,19 @@ def post_calc(limit):
             for j in range(n, limit+1, n):
                 db.update(j, False)
         i += 1
+    db.commit()
+
+
+def _kill():
+    try:
+        db.commit()
+    except db.sqlite3.OperationalError:
+        pass
+    db.close_db()
+    print("\nCalculations interrupted")
 
 
 def SieveOfAtkin(limit):
-    # pre_calc(limit)
-    # calc(limit)
-    # post_calc(limit)
     db.open_db()
     pre_calc(limit)
     calc(limit)

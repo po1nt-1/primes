@@ -20,4 +20,7 @@ if __name__ == "__main__":
         print("Error: Need one input parameter")
         sys.exit()
 
-    atkin.SieveOfAtkin(limit)
+    try:
+        atkin.SieveOfAtkin(limit)
+    except KeyboardInterrupt:
+        atkin._kill()
