@@ -25,12 +25,12 @@ def pre_calc(limit):
 
 
 def calc(data: tuple):
-    end, start, step, limit = data
+    end, start, step = data
     print(f"в функции calc, start={start}")
 
     x = start
-    limit_x = end
-    while(x * x <= limit_x):
+    limit = end
+    while(x * x <= limit):
         print(f"[{x}, {end}]")
         y = 1
         while(y * y <= limit):
@@ -92,10 +92,13 @@ def SieveOfAtkin(limit):
 
     db.begin()
     step = process_count() - 1
+    step = 1
     print("process_count for program", step)
 
     if limit < step:
-        calc((limit, 1, 1, limit))
+        calc((limit, 1, 1))
+    elif step < 2:
+        calc((limit, 1, 1))
     else:
         pool = Pool(step)
 
@@ -107,7 +110,7 @@ def SieveOfAtkin(limit):
             end = start + step * (steps_in_process - 1)
             if start <= increased_proc_number:
                 end += step
-            data = (end, start, step, limit)
+            data = (end, start, step)
             args.append(data)
 
         print(args)
