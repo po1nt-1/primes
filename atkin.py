@@ -31,6 +31,7 @@ def calc(data: tuple):
     x = start
     limit_x = end
     while(x * x <= limit_x):
+        print(f"[{x}, {end}]")
         y = 1
         while(y * y <= limit):
             n = (4 * x * x) + (y * y)
