@@ -31,7 +31,7 @@ def calc(data: tuple):
     x = start
     limit = end
     while(x * x <= limit):
-        print(f"for (int x={start}; x <= {end}; x += {step}) // x={x}")
+        print(f"for(int x={start}; x <= {end}; x += {step}) // текущий x = {x}")
         y = 1
         while(y * y <= limit):
             n = (4 * x * x) + (y * y)
@@ -90,11 +90,11 @@ def SieveOfAtkin(limit):
     db.open_db()
     pre_calc(limit)
 
-    db.begin()
     step = process_count() - 1
-    step = 1
-    print("process_count for program", step)
+    step = 1    # можно жестко установить количество процессов
+    print("process_count for program: ", step)
 
+    db.begin()
     if limit < step:
         calc((limit, 1, 1))
     elif step < 2:
