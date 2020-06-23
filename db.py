@@ -83,26 +83,24 @@ def create_table(limit: int) -> int:
     global c
 
     try:
-        with conn:
-            c.execute("""DROP TABLE IF EXISTS numbers""")
-            c.execute("""
-                CREATE TABLE numbers (
-                number      INTEGER     PRIMARY KEY AUTOINCREMENT, \
-                status      INTEGER     DEFAULT 0)""")
-            print("Table created.")
+        c.execute("""DROP TABLE IF EXISTS numbers""")
+        c.execute("""
+            CREATE TABLE numbers (
+            number      INTEGER     PRIMARY KEY AUTOINCREMENT, \
+            status      INTEGER     DEFAULT 0)""")
+        print("Table created.")
     except sqlite3.Error as e:
         raise db_Error("Error_3 in db.create_table(): " + str(e))
 
     sql = """INSERT INTO numbers (number) VALUES (?)"""
     try:
-        print("Table filling...")
-        with conn:
-            for i in range(limit):
-                c.execute(sql, (i,))
-                bar(i, limit, hop=False)
-            c.execute(sql, (limit,))
-            bar(i + 1, limit)
-        print("The table is full.")
+        print("Table creation...")
+        for i in range(limit):
+            c.execute(sql, (i,))
+            bar(i, limit, hop=False)
+        c.execute(sql, (limit,))
+        bar(i + 1, limit)
+        print("Table created.")
         return 0
     except sqlite3.IntegrityError as e:
         raise db_Error("Error_4 in db.create_table(): " + str(e))

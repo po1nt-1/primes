@@ -1,21 +1,22 @@
 import db
 import multiprocessing as mp
+from multiprocessing import Pool
 
 
-def process_control():
+def process_count() -> int:
     cpu_count = mp.cpu_count()
     if cpu_count >= 6:
-        process_count = cpu_count - 2
+        processes_num = cpu_count - 2
     elif cpu_count > 2 and cpu_count < 6:
-        process_count = cpu_count - 1
+        processes_num = cpu_count - 1
     else:
-        process_count = 2
+        processes_num = 2
+    return processes_num
 
 
 def pre_calc(limit):
-    db.create_table(limit)
-
     db.begin()
+    db.create_table(limit)
     if (limit >= 2):
         db.update(2, True)
     if (limit >= 3):
@@ -23,10 +24,13 @@ def pre_calc(limit):
     db.commit()
 
 
-def calc(limit):
-    db.begin()
-    x = 1
-    while(x * x <= limit):
+def calc(data: tuple):
+    end, start, step, limit = data
+    print("в функции calc")
+
+    x = start
+    limit_x = end
+    while(x * x <= limit_x):
         y = 1
         while(y * y <= limit):
             n = (4 * x * x) + (y * y)
@@ -56,13 +60,13 @@ def calc(limit):
                 else:
                     db.update(n, not checker3)
             y += 1
-        x += 1
-    db.commit()
+        x += step
 
 
-def post_calc(limit):
+def post_calc(end: int, start: int = 5):
     db.begin()
-    i = 5
+    i = start
+    limit = end
     while(i * i <= limit):
         if db.info(i):
             n = i * i
@@ -84,6 +88,36 @@ def _kill():
 def SieveOfAtkin(limit):
     db.open_db()
     pre_calc(limit)
-    calc(limit)
+
+    db.begin()
+    step = process_count() - 1
+    print("process_count for program", step)
+
+    if limit < step:
+        calc((limit, 1, 1, limit))
+    else:
+        pool = Pool(step)
+
+        steps_in_process = limit // step
+        increased_proc_number = limit % step
+
+        args = list()
+        for start in range(1, step + 1):
+            if start == step:    # .
+                print("debug")
+
+            end = start + step * (steps_in_process - 1)
+            if start <= increased_proc_number:
+                end += step
+            data = (end, start, step, limit)
+            args.append(data)
+
+        print(args)
+        pool.map(calc, args)    # тут краш
+
+        pool.close()
+        pool.join()
+    db.commit()
+
     post_calc(limit)
     db.close_db()
