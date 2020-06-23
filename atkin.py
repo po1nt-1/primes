@@ -26,7 +26,7 @@ def pre_calc(limit):
 
 def calc(data: tuple):
     end, start, step, limit = data
-    print("в функции calc")
+    print(f"в функции calc, start={start}")
 
     x = start
     limit_x = end
@@ -103,9 +103,6 @@ def SieveOfAtkin(limit):
 
         args = list()
         for start in range(1, step + 1):
-            if start == step:    # .
-                print("debug")
-
             end = start + step * (steps_in_process - 1)
             if start <= increased_proc_number:
                 end += step
