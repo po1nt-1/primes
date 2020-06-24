@@ -2,7 +2,6 @@ import sqlite3
 import inspect
 import os
 import sys
-from typing import Union
 
 
 def get_script_dir(follow_symlinks: bool = True) -> str:
@@ -16,12 +15,15 @@ def get_script_dir(follow_symlinks: bool = True) -> str:
     return os.path.dirname(path)
 
 
-def bar(i: int, count: int, hop: bool = True) -> None:
-    d = int(50 / count * (i + 1))
+def bar(i: int, limit: int, per=False, hop: bool = True) -> None:
+    d = int(50 / limit * (i + 1))
     text = '\r' + "\u2589" * d + '-' * (50 - d)
-    print(text, f" {i}/{count}", end='')
+    if per:
+        print(text, f" {int((100 * i) / limit)} %", end='')
+    else:
+        print(text, f" {i}/{limit}", end='')
     if hop:
-        if i >= count - 1:
+        if i >= limit - 1:
             print()
     return None
 
@@ -31,32 +33,25 @@ class transaction:
         self.conn: sqlite3.Connection
         self.c: sqlite3.Cursor
 
-    def begin(self):
-        self.c.execute("BEGIN")
-
-    def commit(self):
-        self.c.execute("COMMIT")
-
     def open_db(self) -> int:
         """
             Открытие БД.
             Если БД не существует, будет создана новая БД.
         """
-
-        self.conn = sqlite3.connect(get_script_dir() + "/numbers.db")
+        self.conn = sqlite3.connect(
+            get_script_dir() + "/numbers.db")
         self.c = self.conn.cursor()
-        return 0
+
+        return self.conn
 
     def close_db(self) -> int:
         self.conn.close()
-        return 0
 
     def create_table(self, limit: int) -> int:
         """
             Создание таблицы с нуля.
             Заполнение таблицы
         """
-
         self.c.execute("""DROP TABLE IF EXISTS numbers""")
         self.c.execute("""
             CREATE TABLE numbers (
@@ -81,16 +76,14 @@ class transaction:
             status = 0
 
         self.c.execute(
-            """UPDATE numbers SET status=? WHERE number=?""", (status, number))
-        return 0
+            """UPDATE numbers SET status=? WHERE number=?""",
+            (status, number))
 
-    def info(self, number: int) -> Union[bool, None]:
+    def info(self, number: int) -> bool:
         self.c.execute("""SELECT status FROM numbers WHERE number=?""",
                        (number, ))
         status_int = self.c.fetchone()
-        if status_int is None:
-            return None
-        elif status_int[0] == 1:
+        if status_int[0] == 1:
             status = True
         elif status_int[0] == 0:
             status = False
