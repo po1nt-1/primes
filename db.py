@@ -28,7 +28,7 @@ def bar(i: int, limit: int, per=False, hop: bool = True) -> None:
     return None
 
 
-class transaction:
+class session:
     def __init__(self):
         self.conn: sqlite3.Connection
         self.c: sqlite3.Cursor
@@ -38,53 +38,87 @@ class transaction:
             Открытие БД.
             Если БД не существует, будет создана новая БД.
         """
-        self.conn = sqlite3.connect(
-            get_script_dir() + "/numbers.db")
-        self.c = self.conn.cursor()
+        try:
+            self.conn = sqlite3.connect(
+                get_script_dir() + "/numbers.db")
+            self.c = self.conn.cursor()
 
-        return self.conn
+            return self.conn
+        except KeyboardInterrupt:
+            print("\nThe program is stopped during " +
+                  "the operation with the database.")
+            sys.exit()
 
     def close_db(self) -> int:
-        self.conn.close()
+        try:
+            self.conn.close()
+        except KeyboardInterrupt:
+            print("\nThe program is stopped during " +
+                  "the operation with the database.")
+            sys.exit()
 
     def create_table(self, limit: int) -> int:
         """
             Создание таблицы с нуля.
             Заполнение таблицы
         """
-        self.c.execute("""DROP TABLE IF EXISTS numbers""")
-        self.c.execute("""
-            CREATE TABLE numbers (
-            number      INTEGER     PRIMARY KEY AUTOINCREMENT, \
-            status      INTEGER     DEFAULT 0)""")
-        print("Table created.")
+        try:
+            self.c.execute("""DROP TABLE IF EXISTS numbers""")
+            self.c.execute("""
+                CREATE TABLE numbers (
+                number      INTEGER     PRIMARY KEY AUTOINCREMENT, \
+                status      INTEGER     DEFAULT 0)""")
 
-        sql = """INSERT INTO numbers (number) VALUES (?)"""
-        print("Table creation...")
-        for i in range(limit):
-            self.c.execute(sql, (i,))
-            bar(i, limit, hop=False)
-        self.c.execute(sql, (limit,))
-        bar(i + 1, limit)
-        print("Table created.")
-        return 0
+            sql = """INSERT INTO numbers (number) VALUES (?)"""
+            print("Table creation...")
+            for i in range(limit):
+                self.c.execute(sql, (i,))
+                bar(i, limit, hop=False)
+            self.c.execute(sql, (limit,))
+            bar(i + 1, limit,)
+            print("Table created.")
+            return 0
+        except KeyboardInterrupt:
+            print("\nThe program is stopped during " +
+                  "the operation with the database.")
+            sys.exit()
 
-    def update(self, number: int, status: bool):
-        if status:
-            status = 1
-        else:
-            status = 0
+    def set(self, number: int, status: bool):
+        try:
+            if status:
+                status = 1
+            else:
+                status = 0
 
-        self.c.execute(
-            """UPDATE numbers SET status=? WHERE number=?""",
-            (status, number))
+            self.c.execute(
+                """UPDATE numbers SET status=? WHERE number=?""",
+                (status, number))
+        except KeyboardInterrupt:
+            print("\nThe program is stopped during " +
+                  "the operation with the database.")
+            sys.exit()
 
-    def info(self, number: int) -> bool:
-        self.c.execute("""SELECT status FROM numbers WHERE number=?""",
-                       (number, ))
-        status_int = self.c.fetchone()
-        if status_int[0] == 1:
-            status = True
-        elif status_int[0] == 0:
-            status = False
-        return status
+    def get(self, number: int) -> bool:
+        try:
+            self.c.execute("""SELECT status FROM numbers WHERE number=?""",
+                           (number, ))
+            status_int = self.c.fetchone()
+            if status_int[0] == 1:
+                status = True
+            elif status_int[0] == 0:
+                status = False
+            return status
+        except KeyboardInterrupt:
+            print("\nThe program is stopped during " +
+                  "the operation with the database.")
+            sys.exit()
+
+    def primes_count(self):
+        try:
+            self.c.execute(
+                """SELECT COUNT(status) FROM numbers WHERE status=1""")
+            return self.c.fetchone()[0]
+        except KeyboardInterrupt:
+            print("\nThe program is stopped during " +
+                  "the operation with the database.")
+            sys.exit()
