@@ -1,5 +1,6 @@
-import sys
 import atkin
+import sys
+import time
 
 
 if __name__ == "__main__":
@@ -8,8 +9,6 @@ if __name__ == "__main__":
         if len(args) == 2:
             if args[1].isnumeric():
                 if int(args[1]) > 0:
-                    if int(args[1]) > 250000000:
-                        print("Too many, wait...")
                     limit = int(args[1])
                 else:
                     print(f"Error: The input parameter must " +
@@ -27,7 +26,13 @@ if __name__ == "__main__":
         sys.exit()
 
     try:
+        start = time.time()
         atkin.SieveOfAtkin(limit)
+        total = int((time.time() - start) * 100) / 100
+        if total > 60:
+            print(f"\nTime spent: {total // 60} minutes.")
+        else:
+            print(f"\nTime spent: {total} seconds.")
     except atkin.key_error as e:
         print(str(e))
         sys.exit()
