@@ -224,7 +224,7 @@ def SieveOfAtkin(limit):
         if step > 3:    #
             step = 3
 
-        step = 1    # можно жестко установить количество процессов
+        # step = 3    # можно жестко установить количество процессов
 
         multi(calc, limit, step)
 
