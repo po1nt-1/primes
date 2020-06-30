@@ -1,7 +1,7 @@
 import db
 import multiprocessing as mp
 from sqlite3 import OperationalError
-from typing import Union, Tuple, Callable, List
+from typing import Tuple, Callable
 
 
 class key_error(Exception):
