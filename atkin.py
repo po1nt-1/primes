@@ -1,5 +1,7 @@
 import db
 import multiprocessing as mp
+from sqlite3 import OperationalError
+from typing import Union, Tuple, Callable, List
 
 
 class key_error(Exception):
@@ -22,7 +24,7 @@ def process_count() -> int:
             "\nThe program stopped while calculating the number of processes.")
 
 
-def print_result():
+def print_result() -> None:
     try:
         session = db.session()
         conn = session.open_db()
@@ -36,13 +38,10 @@ def print_result():
     finally:
         if conn:
             conn.close()
+        return None
 
 
-def monitor():
-    print("monitor...monitor...monitor")
-
-
-def pre_calc(limit):
+def pre_calc(limit: int) -> None:
     try:
         session = db.session()
         conn = session.open_db()
@@ -65,9 +64,10 @@ def pre_calc(limit):
     finally:
         if conn:
             conn.close()
+        return None
 
 
-def calc(data: tuple):
+def calc(data: Tuple[int, int, int]) -> None:
     try:
         end, start, step = data
         x = start
@@ -88,7 +88,7 @@ def calc(data: tuple):
                                 raise Exception("\nError in get method.")
                             if session.set(n, not status) == "err":
                                 raise Exception("\nError in set method.")
-                        except db.sqlite3.OperationalError:
+                        except OperationalError:
                             continue
 
                     n = (3 * x * x) + (y * y)
@@ -99,7 +99,7 @@ def calc(data: tuple):
                                 raise Exception("\nError in get method.")
                             if session.set(n, not status) == "err":
                                 raise Exception("\nError in set method.")
-                        except db.sqlite3.OperationalError:
+                        except OperationalError:
                             continue
 
                     n = (3 * x * x) - (y * y)
@@ -110,7 +110,7 @@ def calc(data: tuple):
                                 raise Exception("\nError in get method.")
                             if session.set(n, not status) == "err":
                                 raise Exception("\nError in set method.")
-                        except db.sqlite3.OperationalError:
+                        except OperationalError:
                             continue
                     y += 1
                 x += step
@@ -131,9 +131,10 @@ def calc(data: tuple):
     finally:
         if conn:
             conn.close()
+        return None
 
 
-def post_calc(data: tuple):
+def post_calc(data: Tuple[int, int, int]) -> None:
     try:
         end, start, step = data
         i = start
@@ -156,7 +157,7 @@ def post_calc(data: tuple):
                         for j in range(n, limit+1, n):
                             if session.set(j, False) == "err":
                                 raise Exception("\nError in set method.")
-                except db.sqlite3.OperationalError:
+                except OperationalError:
                     continue
 
                 if s >= 2500:
@@ -178,14 +179,14 @@ def post_calc(data: tuple):
     finally:
         if conn:
             conn.close()
+        return None
 
 
-def multi(func, limit, step):
+def multi(func: Callable[[Tuple[int, int, int]], None],
+          limit: int, step: int) -> None:
     try:
         if func is calc:
             print("The main stage is in progress...")
-            # watchdog = mp.Process(target=monitor, name="watchdog")
-            # watchdog.start()
         elif func is post_calc:
             print("The final stage is in progress...")
         if limit < step or step < 2:
@@ -205,10 +206,10 @@ def multi(func, limit, step):
                 p.map(func, args)
             p.close()
         if func is calc:
-            # watchdog.join()
             print("\nThe main stage is completed.")
         elif func is post_calc:
             print("\nThe final stage is completed.")
+        return None
     except KeyboardInterrupt as e:
         raise key_error(
             f"\n{str(e)}" +
@@ -216,15 +217,14 @@ def multi(func, limit, step):
             "stage of the calculation")
 
 
-def SieveOfAtkin(limit):
+def SieveOfAtkin(limit: int) -> None:
     try:
-        pre_calc(limit)
-
         step = process_count()
-        if step > 3:    #
+        if step > 3:
             step = 3
+        # step = 1    # можно жестко установить количество процессов
 
-        # step = 3    # можно жестко установить количество процессов
+        pre_calc(limit)
 
         multi(calc, limit, step)
 
@@ -232,6 +232,7 @@ def SieveOfAtkin(limit):
 
         print_result()
 
+        return None
     except KeyboardInterrupt as e:
         raise key_error(
             f"\n{str(e)}" +

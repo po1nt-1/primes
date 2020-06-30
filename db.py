@@ -2,12 +2,12 @@ import sqlite3
 import inspect
 import os
 import sys
-from typing import Union
+from typing import Union, Tuple
 
 
 def get_script_dir(follow_symlinks: bool = True) -> str:
     # https://clck.ru/P8NUA
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, 'frozen', False):  # type: ignore
         path = os.path.abspath(sys.executable)
     else:
         path = inspect.getabsfile(get_script_dir)
@@ -16,7 +16,8 @@ def get_script_dir(follow_symlinks: bool = True) -> str:
     return os.path.dirname(path)
 
 
-def bar(i: int, limit: int, per=False, hop: bool = True, id: int = 1) -> None:
+def bar(i: int, limit: int,
+        per: bool = False, hop: bool = True) -> None:
     d = int(50 / limit * (i + 1))
     text = '\r' + "\u2589" * d + '-' * (50 - d)
     if per:
@@ -30,7 +31,7 @@ def bar(i: int, limit: int, per=False, hop: bool = True, id: int = 1) -> None:
 
 
 class session:
-    def __init__(self):
+    def __init__(self) -> None:
         self.conn: sqlite3.Connection
         self.c: sqlite3.Cursor
 
@@ -50,14 +51,16 @@ class session:
             raise KeyboardInterrupt("\nThe program is stopped during " +
                                     "the operation with the database.")
 
-    def close_db(self) -> sqlite3.Connection:
+    def close_db(self) -> None:
         try:
             self.conn.close()
+
+            return None
         except KeyboardInterrupt:
             raise KeyboardInterrupt("\nThe program is stopped during " +
                                     "the operation with the database.")
 
-    def create_table(self, limit: int, conn) -> int:
+    def create_table(self, limit: int, conn: sqlite3.Connection) -> None:
         """
             Создание таблицы с нуля.
             Заполнение таблицы
@@ -81,21 +84,24 @@ class session:
                 bar(i + 1, limit)
                 print("Table created.")
             self.conn.commit()
+
+            return None
         except KeyboardInterrupt:
             raise KeyboardInterrupt("\nThe program is stopped during " +
                                     "the operation with the database.")
 
-    def set(self, number: int, status: Union[bool, str]):
+    def set(self, number: int, status: Union[bool, str]) -> Union[None, str]:
         try:
             if status is True:
-                status = 1
+                status_int = 1
             elif status is False:
-                status = 0
+                status_int = 0
             else:
                 return "err"
             self.c.execute(
                 """UPDATE numbers SET status=? WHERE number=?""",
-                (status, number))
+                (status_int, number))
+            return None
         except KeyboardInterrupt:
             raise KeyboardInterrupt("\nThe program is stopped during " +
                                     "the operation with the database.")
@@ -104,23 +110,24 @@ class session:
         try:
             self.c.execute("""SELECT status FROM numbers WHERE number=?""",
                            (number, ))
-            status_int = self.c.fetchone()
+            status_int: Tuple[int] = self.c.fetchone()
             if status_int[0] == 1:
                 status = True
             elif status_int[0] == 0:
                 status = False
             else:
-                status = "err"
+                return "err"
             return status
         except KeyboardInterrupt:
             raise KeyboardInterrupt("\nThe program is stopped during " +
                                     "the operation with the database.")
 
-    def primes_count(self):
+    def primes_count(self) -> int:
         try:
             self.c.execute(
                 """SELECT COUNT(status) FROM numbers WHERE status=1""")
-            return self.c.fetchone()[0]
+            result: Tuple[int] = self.c.fetchone()
+            return result[0]
         except KeyboardInterrupt:
             raise KeyboardInterrupt("\nThe program is stopped during " +
                                     "the operation with the database.")
